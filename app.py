@@ -43,6 +43,16 @@ def index():
     data_files = [f for f in os.listdir("data") if not f.startswith(".")]
     return render_template("index.html", total_regions=total_regions, data_files=data_files)
 
+@app.route("/sw.js")
+def service_worker():
+    """PWA 서비스 워커 제공"""
+    return app.send_static_file("sw.js"), 200, {"Content-Type": "application/javascript"}
+
+@app.route("/manifest.json")
+def manifest():
+    """PWA 매니페스트 파일 제공"""
+    return app.send_static_file("manifest.json"), 200, {"Content-Type": "application/json"}
+
 @app.route("/api/rankings", methods=["GET"])
 def get_rankings():
     """순위별 전체 통계 데이터 반환 (PIR순, 가격순, 소득순 정렬 지원)"""

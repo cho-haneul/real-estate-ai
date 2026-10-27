@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let dynamicChartInstance = null;
     let simChartInstance = null;
     let latestAiResult = null;
+    let deferredInstallPrompt = null;
 
     // DOM 요소 캐싱 - 랭킹 테이블
     const rankingTableBody = document.getElementById("rankingTableBody");
@@ -58,7 +59,76 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnCopyAnswer = document.getElementById("btnCopyAnswer");
     const btnDownloadAnswerMd = document.getElementById("btnDownloadAnswerMd");
 
+    // DOM 요소 캐싱 - PWA 앱 설치
+    const btnInstallApp = document.getElementById("btnInstallApp");
+    const installModal = document.getElementById("installModal");
+    const installModalBackdrop = document.getElementById("installModalBackdrop");
+    const modalCloseBtn = document.getElementById("modalCloseBtn");
+    const btnModalConfirm = document.getElementById("btnModalConfirm");
+    const stepAndroid = document.getElementById("stepAndroid");
+    const stepIos = document.getElementById("stepIos");
+
+    // ==========================================================================
+    // 0. PWA 서비스 워커 등록 및 설치 프롬프트 바인딩
+    // ==========================================================================
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js").catch(err => {
+            console.log("Service Worker 등록 실패 (무시 가능):", err);
+        });
+    }
+
+    // 안드로이드 / 크롬 네이티브 설치 프롬프트 캡처
+    window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        if (btnInstallApp) {
+            btnInstallApp.classList.remove("d-none");
+        }
+    });
+
+    // 앱 설치 버튼 클릭 이벤트
+    if (btnInstallApp) {
+        btnInstallApp.addEventListener("click", async () => {
+            if (deferredInstallPrompt) {
+                // 안드로이드 / 크롬 설치 팝업 즉시 실행
+                deferredInstallPrompt.prompt();
+                const choiceResult = await deferredInstallPrompt.userChoice;
+                if (choiceResult.outcome === "accepted") {
+                    console.log("사용자가 앱 설치를 수락했습니다.");
+                }
+                deferredInstallPrompt = null;
+            } else {
+                // 아이폰 또는 네이티브 프롬프트가 지원되지 않는 경우 모달 가이드 표시
+                openInstallModal();
+            }
+        });
+    }
+
+    function openInstallModal() {
+        const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIos) {
+            stepIos.style.border = "2px solid #2563eb";
+            stepIos.style.background = "#eff6ff";
+            stepAndroid.style.opacity = "0.6";
+        } else {
+            stepAndroid.style.border = "2px solid #10b981";
+            stepAndroid.style.background = "#ecfdf5";
+            stepIos.style.opacity = "0.6";
+        }
+        installModal.classList.remove("d-none");
+    }
+
+    function closeInstallModal() {
+        installModal.classList.add("d-none");
+    }
+
+    if (modalCloseBtn) modalCloseBtn.addEventListener("click", closeInstallModal);
+    if (installModalBackdrop) installModalBackdrop.addEventListener("click", closeInstallModal);
+    if (btnModalConfirm) btnModalConfirm.addEventListener("click", closeInstallModal);
+
+    // ==========================================================================
     // 1. 초기 랭킹 데이터 로드
+    // ==========================================================================
     fetchRankings();
 
     // 2. 랭킹 데이터 API 호출 및 렌더링
@@ -148,10 +218,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==========================================================================
-    // 4. [신규] 내 소득 기반 주택 구입 소요 기간 시뮬레이터 로직
+    // 4. 내 소득 기반 주택 구입 소요 기간 시뮬레이터 로직
     // ==========================================================================
 
-    // 4-1. 시뮬레이터 지역 드롭다운 동적 생성
     function populateSimulatorRegions(data) {
         if (!simTargetRegion || !data || data.length === 0) return;
         const currentSelected = simTargetRegion.value || "서울";
@@ -168,11 +237,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 4-2. 실시간 시뮬레이션 연산 함수
     function calculateSimulation() {
         if (!cachedRegionsData || cachedRegionsData.length === 0) return;
 
-        // 1. 사용자 입력 파싱
         const income = parseInt(simIncome.value) || 5000;
         const assets = parseInt(simAssets.value) || 0;
         const saveRatePct = parseInt(simSaveRate.value) || 50;
@@ -181,28 +248,23 @@ document.addEventListener("DOMContentLoaded", () => {
         const ltv = ltvPct / 100.0;
         const selectedRegion = simTargetRegion.value || "서울";
 
-        // 입력 뱃지 라벨 업데이트
         lblSimIncome.textContent = formatMoney(income);
         lblSimAssets.textContent = formatMoney(assets);
         lblSimSaveRate.textContent = `${saveRatePct}% 저축`;
 
-        // 2. 목표 지역 데이터 조회
         const regionData = cachedRegionsData.find(r => r.region === selectedRegion) || cachedRegionsData[0];
         const targetPrice = regionData.avg_house_price_manwon;
 
         resTargetRegionName.textContent = `${regionData.region} 기준`;
         resTargetPrice.textContent = formatMoney(targetPrice);
 
-        // 3. 연간 및 월간 저축 가능 금액 산출
-        const annualSaving = income * saveRate; // 만원 단위
-        const monthlySaving = Math.round(annualSaving / 12.0); // 만원 단위
+        const annualSaving = income * saveRate;
+        const monthlySaving = Math.round(annualSaving / 12.0);
         resAnnualSavingsText.textContent = `연간 ${formatMoney(annualSaving)} (월 약 ${monthlySaving.toLocaleString()}만원) 저축 기준`;
 
-        // 4. 순수 저축 시 소요 기간 계산
         const neededPureMoney = Math.max(0, targetPrice - assets);
         resNeededMoney.textContent = formatMoney(neededPureMoney);
 
-        // 목표 달성률 계산
         const goalPct = Math.min(100, Math.max(0, (assets / targetPrice) * 100)).toFixed(1);
         resGoalPct.textContent = `${goalPct}%`;
         resGoalBar.style.width = `${goalPct}%`;
@@ -216,7 +278,6 @@ document.addEventListener("DOMContentLoaded", () => {
             resPureYears.innerHTML = `${pureIntYears}<span class="unit">년</span> ${pureIntMonths}<span class="unit">개월</span>`;
         }
 
-        // 5. 대출(LTV) 활용 시 계산
         resLtvVal.textContent = ltvPct;
         const loanCompareBox = document.getElementById("loanCompareBox");
 
@@ -225,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             loanCompareBox.style.display = "block";
             const maxLoan = targetPrice * ltv;
-            const requiredEquity = targetPrice - maxLoan; // 내가 모아야 하는 최소 종잣돈
+            const requiredEquity = targetPrice - maxLoan;
             const neededEquitySaving = Math.max(0, requiredEquity - assets);
 
             if (neededEquitySaving <= 0) {
@@ -244,30 +305,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
             resLoanAmount.textContent = formatMoney(maxLoan);
 
-            // 월 예상 대출 원리금 상환액 (30년 만기, 금리 4.2% 기준)
             const monthlyPayment = calcMortgagePMT(maxLoan, 0.042, 30);
             resMonthlyRepay.textContent = `월 약 ${monthlyPayment.toLocaleString()}만원`;
         }
 
-        // 6. 시뮬레이터 비교 차트 업데이트
         updateSimulatorChart(annualSaving, assets);
     }
 
-    // 4-3. 주택담보대출 원리금 균등상환 계산 공식 (PMT)
     function calcMortgagePMT(principalManwon, annualRate, years) {
         if (principalManwon <= 0) return 0;
         const p = principalManwon * 10000;
         const r = annualRate / 12.0;
         const n = years * 12;
         const pmt = p * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-        return Math.round(pmt / 10000); // 만원 단위
+        return Math.round(pmt / 10000);
     }
 
-    // 4-4. 내 조건 기준 주요 지역별 소요 기간 차트
     function updateSimulatorChart(annualSaving, currentAssets) {
         if (!cachedRegionsData || cachedRegionsData.length === 0) return;
 
-        // 대표 7개 지역 선정
         const benchmarkRegions = ["서울 강남지역 동남권", "서울", "경기 경부1권", "인천", "부산", "대구", "전국"];
         const matchedItems = [];
 
@@ -301,10 +357,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     label: "내 저축 기준 내 집 마련 소요 기간 (년)",
                     data: yearsData,
                     backgroundColor: [
-                        "rgba(217, 119, 6, 0.85)",  // Gold
-                        "rgba(37, 99, 235, 0.85)",  // Blue
+                        "rgba(217, 119, 6, 0.85)",
+                        "rgba(37, 99, 235, 0.85)",
                         "rgba(59, 130, 246, 0.85)",
-                        "rgba(16, 185, 129, 0.85)", // Emerald
+                        "rgba(16, 185, 129, 0.85)",
                         "rgba(16, 185, 129, 0.85)",
                         "rgba(100, 116, 139, 0.85)",
                         "rgba(100, 116, 139, 0.85)"
@@ -338,7 +394,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 4-5. 시뮬레이터 이벤트 바인딩
     simIncome.addEventListener("input", calculateSimulation);
     simAssets.addEventListener("input", calculateSimulation);
     simTargetRegion.addEventListener("change", calculateSimulation);
@@ -353,7 +408,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // 4-6. 시뮬레이터에서 AI 맞춤 자산 전략 리포트 연동
     btnAskAiStrategy.addEventListener("click", () => {
         const income = simIncome.value;
         const assets = simAssets.value;
@@ -438,10 +492,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             latestAiResult = result;
 
-            // 1. 맞춤형 차트 렌더링
             renderDynamicChart(result.chart_data);
 
-            // 2. AI 답변 렌더링 (Markdown 변환)
             if (window.marked && typeof marked.parse === "function") {
                 aiAnswerContent.innerHTML = marked.parse(result.ai_answer);
             } else {
@@ -460,7 +512,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 7. 질문 맞춤형 차트 렌더링 (Chart.js 고급 듀얼 축)
+    // 7. 질문 맞춤형 차트 렌더링
     function renderDynamicChart(chartData) {
         if (dynamicChartInstance) dynamicChartInstance.destroy();
 

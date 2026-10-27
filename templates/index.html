@@ -2,8 +2,18 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI 대한민국 부동산 & 자산 랭킹 인텔리전스</title>
+    
+    <!-- PWA Web App Manifest & Mobile Meta -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="부동산AI">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+
     <!-- Pretendard Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,10 +27,19 @@
     <div class="app-container">
         <!-- 1. 프리미엄 금융 & 부동산 히어로 배너 -->
         <header class="hero-banner">
-            <div class="hero-badge-group">
-                <span class="badge-fintech">💎 대한민국 자산 & 부동산 금융 대시보드</span>
-                <span class="badge-status" id="dataStatusBadge">🟢 국세청 소득 & 부동산원 실거래 데이터 연동 정상 ({{ total_regions }}개 지역)</span>
+            <div class="hero-top-row">
+                <div class="hero-badge-group">
+                    <span class="badge-fintech">💎 대한민국 자산 & 부동산 금융 대시보드</span>
+                    <span class="badge-status" id="dataStatusBadge">🟢 데이터 연동 정상 ({{ total_regions }}개 지역)</span>
+                </div>
+                <!-- [핵심] 모바일 및 데스크톱 앱 즉시 설치 버튼 -->
+                <button type="button" id="btnInstallApp" class="btn-install-app" title="스마트폰 홈 화면에 앱으로 설치합니다">
+                    <span class="install-pulse"></span>
+                    <span class="install-icon">📲</span>
+                    <span class="install-text">앱 설치하기</span>
+                </button>
             </div>
+
             <h1>소득 수준별 <span class="hero-highlight">부동산 자산 가치</span> & 내 집 마련 랭킹</h1>
             <p class="hero-desc">
                 실제 국세청 <strong>근로소득 연말정산 통계</strong>와 한국부동산원 <strong>실거래 평균 매매가</strong>를 정밀 결합하여, 
@@ -362,6 +381,37 @@
                 💡 <strong>PIR(Price to Income Ratio) 가이드</strong>: 1년 동안 번 근로소득을 단 1원도 쓰지 않고 모았을 때 해당 지역의 평균 주택을 매수하는 데 걸리는 기간(년)입니다. 일반적으로 <strong>10년 이하</strong>는 적정 부담, <strong>15~20년 이상</strong>은 극심한 고부담 지역으로 평가됩니다.
             </div>
         </section>
+    </div>
+
+    <!-- 모바일 앱 설치 안내 모달 (iOS / Android 공용) -->
+    <div id="installModal" class="install-modal d-none">
+        <div class="install-modal-backdrop" id="installModalBackdrop"></div>
+        <div class="install-modal-content">
+            <button type="button" class="modal-close-btn" id="modalCloseBtn">&times;</button>
+            <div class="modal-icon-wrap">📲</div>
+            <h3>스마트폰 홈 화면에 바로 설치하기</h3>
+            <p class="modal-desc">앱스토어 다운로드 없이, 1초 만에 스마트폰 바탕화면에 진짜 앱처럼 바로 설치됩니다!</p>
+
+            <div class="install-steps">
+                <!-- 안드로이드 / 크롬 안내 -->
+                <div class="step-card" id="stepAndroid">
+                    <div class="step-title">🤖 갤럭시 (안드로이드 / 삼성인터넷 / 크롬)</div>
+                    <p>지금 바로 뜬 <strong>[설치]</strong> 또는 <strong>[홈 화면에 추가]</strong> 버튼을 누르면 즉시 설치됩니다.</p>
+                </div>
+
+                <!-- 아이폰 사파리 안내 -->
+                <div class="step-card" id="stepIos">
+                    <div class="step-title">🍎 아이폰 / 아이패드 (Safari)</div>
+                    <ol>
+                        <li>화면 하단 가운데 <strong>[공유(Share) 버튼]</strong> (네모에 위 화살표 아이콘 📤)을 누릅니다.</li>
+                        <li>메뉴를 살짝 올려 <strong>[홈 화면에 추가]</strong>를 누릅니다.</li>
+                        <li>오른쪽 상단 <strong>[추가]</strong>를 누르면 바탕화면에 바로 생성됩니다!</li>
+                    </ol>
+                </div>
+            </div>
+
+            <button type="button" class="btn-modal-confirm" id="btnModalConfirm">알겠습니다 👍</button>
+        </div>
     </div>
 
     <!-- JS 스크립트 -->

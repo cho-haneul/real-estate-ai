@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 2. 랭킹 데이터 API 호출 및 렌더링
     async function fetchRankings() {
         try {
-            rankingTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem;">통계 데이터 로딩 중...</td></tr>`;
+            rankingTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2.5rem; color: #64748b;">📊 국세청 소득 및 부동산원 통계 집계 중...</td></tr>`;
 
             const url = `/api/rankings?sort=${currentSort}&area=${currentArea}&search=${encodeURIComponent(currentSearch)}`;
             const res = await fetch(url);
@@ -46,18 +46,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
             renderRankingTable(result.data);
             if (dataStatusBadge) {
-                dataStatusBadge.textContent = `🟢 데이터 연동 정상 (${result.count}개 지역)`;
+                dataStatusBadge.textContent = `🟢 국세청 소득 & 부동산원 실거래 데이터 연동 정상 (${result.count}개 지역)`;
             }
         } catch (err) {
             console.error("랭킹 조회 실패:", err);
-            rankingTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: #ef4444; padding: 2rem;">데이터를 불러오지 못했습니다: ${err.message}</td></tr>`;
+            rankingTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: #ef4444; padding: 2.5rem;">데이터를 불러오지 못했습니다: ${err.message}</td></tr>`;
         }
     }
 
-    // 3. 랭킹 테이블 렌더링
+    // 3. 랭킹 테이블 렌더링 (부동산 & 자산 테마 디자인 적용)
     function renderRankingTable(data) {
         if (!data || data.length === 0) {
-            rankingTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem;">해당 조건에 일치하는 지역이 없습니다.</td></tr>`;
+            rankingTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2.5rem; color: #64748b;">조건에 일치하는 지역이 없습니다.</td></tr>`;
             return;
         }
 
@@ -66,29 +66,40 @@ document.addEventListener("DOMContentLoaded", () => {
         data.forEach((row, idx) => {
             const rank = idx + 1;
             const tr = document.createElement("tr");
+            if (rank === 1) tr.classList.add("row-rank-1");
 
             // 순위 뱃지 스타일
             let rankBadgeHtml = `<span class="rank-badge rank-other">${rank}</span>`;
-            if (rank === 1) rankBadgeHtml = `<span class="rank-badge rank-1">🥇</span>`;
-            else if (rank === 2) rankBadgeHtml = `<span class="rank-badge rank-2">🥈</span>`;
-            else if (rank === 3) rankBadgeHtml = `<span class="rank-badge rank-3">🥉</span>`;
+            if (rank === 1) rankBadgeHtml = `<span class="rank-badge rank-1" title="1위">🥇</span>`;
+            else if (rank === 2) rankBadgeHtml = `<span class="rank-badge rank-2" title="2위">🥈</span>`;
+            else if (rank === 3) rankBadgeHtml = `<span class="rank-badge rank-3" title="3위">🥉</span>`;
 
             // PIR 수준 판정 및 태그
-            let levelTag = `<span class="level-tag level-normal">적정 부담</span>`;
+            let levelTag = `<span class="level-tag level-normal">🏡 적정 부담</span>`;
             if (row.pir >= 20) {
-                levelTag = `<span class="level-tag level-extreme">극심한 부담</span>`;
+                levelTag = `<span class="level-tag level-extreme">🔥 극심한 부담</span>`;
             } else if (row.pir >= 13) {
-                levelTag = `<span class="level-tag level-high">높은 부담</span>`;
+                levelTag = `<span class="level-tag level-high">⚠️ 높은 부담</span>`;
             }
 
             // 게이지 바 퍼센트 (PIR 40년을 100% 기준으로 산정)
             const fillPct = Math.min(Math.round((row.pir / 40.0) * 100), 100);
 
+            // 월 환산 추정 소득
+            const monthlyIncome = Math.round(row.avg_income_manwon / 12);
+
             tr.innerHTML = `
                 <td style="text-align:center;">${rankBadgeHtml}</td>
-                <td><strong>${row.region}</strong></td>
-                <td>${formatMoney(row.avg_house_price_manwon)}</td>
-                <td>${formatMoney(row.avg_income_manwon)}</td>
+                <td>
+                    <strong>${row.region}</strong>
+                </td>
+                <td>
+                    <span class="price-chip">💰 ${formatMoney(row.avg_house_price_manwon)}</span>
+                </td>
+                <td>
+                    <strong>${formatMoney(row.avg_income_manwon)}</strong>
+                    <span class="income-sub-text">월 환산 ~${monthlyIncome.toLocaleString()}만원</span>
+                </td>
                 <td>
                     <div class="pir-bar-wrap">
                         <span class="pir-val">${row.pir}년</span>
@@ -157,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
         aiResultArea.classList.add("d-none");
 
         try {
-            updateLoadingMsg("실제 국세청 소득 및 한국부동산원 실거래가 통계 수치 연산 중...");
+            updateLoadingMsg("실제 국세청 소득 통계 및 한국부동산원 실거래가 정밀 연산 중...");
 
             const response = await fetch("/api/query", {
                 method: "POST",
@@ -165,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({ question: question })
             });
 
-            updateLoadingMsg("Gemini 1.5 Flash 모델이 통계를 바탕으로 심층 답변을 작성 중입니다...");
+            updateLoadingMsg("Gemini 최신 금융 모델이 이코노미스트 자산 분석 리포트를 작성 중입니다...");
 
             const result = await response.json();
             if (!response.ok || !result.success) {
@@ -196,7 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 9. 질문 맞춤형 차트 렌더링 (Chart.js 복합 그래프)
+    // 9. 질문 맞춤형 차트 렌더링 (Chart.js 고급 듀얼 축)
     function renderDynamicChart(chartData) {
         if (dynamicChartInstance) dynamicChartInstance.destroy();
 
@@ -212,21 +223,26 @@ document.addEventListener("DOMContentLoaded", () => {
                         type: "bar",
                         label: "평균 주택매매가 (만원)",
                         data: chartData.prices,
-                        backgroundColor: "rgba(37, 99, 235, 0.75)",
-                        borderColor: "#2563eb",
-                        borderWidth: 1,
-                        borderRadius: 6,
+                        backgroundColor: "rgba(37, 99, 235, 0.8)",
+                        hoverBackgroundColor: "rgba(29, 78, 216, 0.95)",
+                        borderColor: "#1d4ed8",
+                        borderWidth: 1.5,
+                        borderRadius: 8,
                         yAxisID: "yPrice"
                     },
                     {
                         type: "line",
                         label: "PIR (소득 소요 연수)",
                         data: chartData.pir,
-                        borderColor: "#ef4444",
-                        backgroundColor: "rgba(239, 68, 68, 0.15)",
-                        borderWidth: 3,
+                        borderColor: "#d97706",
+                        backgroundColor: "rgba(245, 158, 11, 0.2)",
+                        borderWidth: 3.5,
+                        pointBackgroundColor: "#ffffff",
+                        pointBorderColor: "#d97706",
+                        pointBorderWidth: 2.5,
                         pointRadius: 6,
-                        tension: 0.25,
+                        pointHoverRadius: 8,
+                        tension: 0.3,
                         yAxisID: "yPir"
                     }
                 ]
@@ -235,14 +251,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: "top" },
+                    legend: {
+                        position: "top",
+                        labels: {
+                            font: { family: "Pretendard", weight: "600", size: 12 },
+                            usePointStyle: true
+                        }
+                    },
                     tooltip: {
+                        backgroundColor: "rgba(15, 23, 42, 0.9)",
+                        titleFont: { family: "Pretendard", weight: "bold" },
+                        bodyFont: { family: "Pretendard" },
+                        padding: 12,
+                        cornerRadius: 8,
                         callbacks: {
                             label: (ctx) => {
                                 if (ctx.dataset.yAxisID === "yPrice") {
-                                    return `매매가: ${formatMoney(ctx.raw)}`;
+                                    return ` 💰 평균 매매가: ${formatMoney(ctx.raw)}`;
                                 }
-                                return `PIR: ${ctx.raw}년 소득분`;
+                                return ` ⏳ PIR: ${ctx.raw}년 치 연소득 모아야 함`;
                             }
                         }
                     }
@@ -251,16 +278,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     yPrice: {
                         type: "linear",
                         position: "left",
-                        title: { display: true, text: "주택 매매가 (만원)" },
+                        title: { display: true, text: "주택 매매가 (만원)", font: { weight: "600" } },
                         ticks: {
                             callback: (v) => `${(v / 10000).toFixed(0)}억`
-                        }
+                        },
+                        grid: { color: "rgba(226, 232, 240, 0.6)" }
                     },
                     yPir: {
                         type: "linear",
                         position: "right",
-                        title: { display: true, text: "PIR (년)" },
+                        title: { display: true, text: "PIR (연수)", font: { weight: "600" } },
                         grid: { drawOnChartArea: false }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: "Pretendard", weight: "500" } }
                     }
                 }
             }
@@ -271,15 +303,15 @@ document.addEventListener("DOMContentLoaded", () => {
     btnCopyAnswer.addEventListener("click", () => {
         if (!latestAiResult) return;
         navigator.clipboard.writeText(latestAiResult.ai_answer).then(() => {
-            alert("AI 답변 내용이 클립보드에 복사되었습니다!");
+            alert("AI 분석 리포트가 클립보드에 복사되었습니다!");
         });
     });
 
     btnDownloadAnswerMd.addEventListener("click", () => {
         if (!latestAiResult) return;
         const timestamp = new Date().toISOString().slice(0, 10);
-        const fileName = `부동산_AI답변_${timestamp}.md`;
-        const content = `# 부동산 통계 기반 AI 분석 답변\n\n- 질문: ${latestAiResult.question}\n- 일시: ${new Date().toLocaleString()}\n\n---\n\n${latestAiResult.ai_answer}`;
+        const fileName = `부동산_자산분석리포트_${timestamp}.md`;
+        const content = `# 대한민국 부동산 및 자산 금융 AI 분석 리포트\n\n- 질문: ${latestAiResult.question}\n- 분석 일시: ${new Date().toLocaleString()}\n- 데이터 출처: 국세청 근로소득 및 한국부동산원 실거래가\n\n---\n\n${latestAiResult.ai_answer}`;
         
         const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
         const a = document.createElement("a");

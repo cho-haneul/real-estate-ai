@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전국 부동산 & 소득 수준 순위 분석 및 AI 질의응답</title>
+    <!-- Pretendard Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js & Marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 1. 헤더 & 데이터 소스 상태 -->
+        <header class="app-header">
+            <div class="header-badges">
+                <span class="logo-badge">📊 전국 부동산 & 국세청 소득 통계 연동 시스템</span>
+                <span class="status-badge" id="dataStatusBadge">🟢 데이터 연동 중 ({{ total_regions }}개 지역)</span>
+            </div>
+            <h1>소득 수준별 부동산 가격 순위 분석 및 AI 질문 센터</h1>
+            <p class="subtitle">
+                국세청 근로소득 통계와 한국부동산원 실거래 가격을 결합하여 <strong>전국 지역별 순위표</strong>를 제공하고,
+                입력하신 질문에 맞춰 <strong>동적 그래프</strong>와 <strong>Gemini AI 심층 분석</strong>을 제시합니다.
+            </p>
+
+            <!-- 로드된 파일 정보 및 새로고침 바 -->
+            <div class="data-file-bar">
+                <div class="file-list-info">
+                    📁 <strong>현재 연동된 통계 데이터:</strong>
+                    {% for f in data_files %}
+                        <span class="file-chip">{{ f }}</span>
+                    {% endfor %}
+                </div>
+                <button type="button" id="btnReloadData" class="btn-reload" title="data 폴더의 파일을 다시 읽어옵니다">
+                    🔄 통계 새로고침
+                </button>
+            </div>
+        </header>
+
+        <!-- 2. AI 질문 입력 카드 & 맞춤형 시각화 섹션 -->
+        <section class="card query-card">
+            <div class="card-header">
+                <h3>💡 통계 기반 AI 맞춤 질문 및 스마트 그래프</h3>
+                <p class="section-desc">궁금한 점을 자유롭게 질문하시면 실제 통계 수치 분석과 함께 맞춤형 차트를 그려드립니다.</p>
+            </div>
+
+            <form id="queryForm">
+                <div class="input-with-button">
+                    <input type="text" id="queryInput" placeholder="예: 소득 대비 집을 사기 가장 수월한 지역 Top 5는 어디야?" autocomplete="off" required>
+                    <button type="submit" id="btnQuerySubmit" class="btn-query">
+                        <span>질문하기 🚀</span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- 추천 질문 칩 -->
+            <div class="suggested-queries">
+                <span class="suggest-title">추천 질문:</span>
+                <button type="button" class="btn-chip" data-q="소득 대비 집을 사기 가장 수월한 지역 Top 5는 어디야?">가장 살기 쉬운 가성비 지역 Top 5</button>
+                <button type="button" class="btn-chip" data-q="전국에서 PIR(내 집 마련 소요 연수)이 가장 높은 지역 Top 5와 원인은?">PIR 부담 가장 높은 지역 Top 5</button>
+                <button type="button" class="btn-chip" data-q="서울과 경기도의 평균 소득 및 주택 가격 격차를 비교해줘">서울 vs 경기 소득 및 집값 격차</button>
+                <button type="button" class="btn-chip" data-q="연봉 5천만원 기준 대출 상환이 가장 현실적인 수도권 지역은?">연봉 5천만원 추천 수도권 지역</button>
+            </div>
+
+            <!-- AI 로딩 인디케이터 -->
+            <div id="aiLoadingIndicator" class="loading-container d-none">
+                <div class="spinner"></div>
+                <div class="loading-text" id="aiLoadingText">실제 국세청 소득 및 주택 통계 데이터 연산 중...</div>
+                <div class="loading-subtext">Gemini 1.5 Flash 모델이 통계 수치를 인용하여 답변을 작성하고 있습니다.</div>
+            </div>
+
+            <!-- AI 답변 및 맞춤 차트 출력 영역 -->
+            <div id="aiResultArea" class="ai-result-area d-none">
+                <!-- 질문 맞춤형 차트 -->
+                <div class="dynamic-chart-box">
+                    <h4 id="dynamicChartTitle">📈 질문 관련 통계 시각화</h4>
+                    <div class="chart-wrapper">
+                        <canvas id="dynamicChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- AI 답변 본문 -->
+                <div class="ai-response-box">
+                    <div class="ai-box-header">
+                        <div class="ai-title-wrap">
+                            <span class="ai-icon">🤖</span>
+                            <strong>Gemini AI 수석 이코노미스트 분석 답변</strong>
+                        </div>
+                        <div class="box-actions">
+                            <button type="button" id="btnCopyAnswer" class="btn-action-sm">📋 답변 복사</button>
+                            <button type="button" id="btnDownloadAnswerMd" class="btn-action-sm">💾 .md 다운로드</button>
+                        </div>
+                    </div>
+                    <div class="markdown-body" id="aiAnswerContent"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. 전국 지역별 종합 랭킹 대시보드 (순위표) -->
+        <section class="card ranking-card">
+            <div class="ranking-header">
+                <div>
+                    <h2>🏆 전국 지역별 부동산 & 소득 종합 순위표</h2>
+                    <p class="section-desc">국세청 근로소득 및 주택 평균 매매가를 바탕으로 산출한 순위입니다.</p>
+                </div>
+                <!-- 지역 필터 탭 -->
+                <div class="area-filter-group">
+                    <button type="button" class="btn-filter active" data-area="all">전국 전체</button>
+                    <button type="button" class="btn-filter" data-area="capital">수도권 (서울/경기/인천)</button>
+                    <button type="button" class="btn-filter" data-area="province">지방 (광역시 및 도)</button>
+                </div>
+            </div>
+
+            <!-- 정렬 탭 & 실시간 검색바 -->
+            <div class="ranking-controls">
+                <div class="sort-tab-group">
+                    <button type="button" class="tab-btn active" data-sort="pir">
+                        ⏳ PIR (내 집 마련 부담도) 순위
+                    </button>
+                    <button type="button" class="tab-btn" data-sort="price">
+                        💰 주택 매매가격 순위
+                    </button>
+                    <button type="button" class="tab-btn" data-sort="income">
+                        💼 평균 근로소득 순위
+                    </button>
+                    <button type="button" class="tab-btn" data-sort="affordability">
+                        🟢 가성비 (구매 수월성) 순위
+                    </button>
+                </div>
+
+                <div class="search-box">
+                    <input type="text" id="rankingSearchInput" placeholder="지역명 검색 (예: 서울, 강남, 경기...)" autocomplete="off">
+                </div>
+            </div>
+
+            <!-- 순위 표 테이블 -->
+            <div class="table-responsive">
+                <table class="ranking-table" id="rankingTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px; text-align: center;">순위</th>
+                            <th>지역명</th>
+                            <th>평균 주택 매매가</th>
+                            <th>1인당 평균 연소득</th>
+                            <th>PIR (소득 소요 연수)</th>
+                            <th>내 집 마련 부담 수준</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rankingTableBody">
+                        <!-- JS에서 동적 주입 -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="ranking-footer-note">
+                * <strong>PIR(Price to Income Ratio)</strong>: 연간 근로소득을 한 푼도 쓰지 않고 모았을 때 해당 지역의 평균 주택을 구입하는 데 걸리는 햇수입니다. 수치가 높을수록 소득 대비 집값이 높아 부담이 큽니다.
+            </div>
+        </section>
+    </div>
+
+    <!-- JS 스크립트 -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

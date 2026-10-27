@@ -19,12 +19,12 @@
         <header class="hero-banner">
             <div class="hero-badge-group">
                 <span class="badge-fintech">💎 대한민국 자산 & 부동산 금융 대시보드</span>
-                <span class="badge-status" id="dataStatusBadge">🟢 국세청 소득 & 부동산원 실거래 데이터 실시간 연동 ({{ total_regions }}개 지역)</span>
+                <span class="badge-status" id="dataStatusBadge">🟢 국세청 소득 & 부동산원 실거래 데이터 연동 정상 ({{ total_regions }}개 지역)</span>
             </div>
             <h1>소득 수준별 <span class="hero-highlight">부동산 자산 가치</span> & 내 집 마련 랭킹</h1>
             <p class="hero-desc">
                 실제 국세청 <strong>근로소득 연말정산 통계</strong>와 한국부동산원 <strong>실거래 평균 매매가</strong>를 정밀 결합하여, 
-                전국 42개 권역의 <strong>PIR(소득 대비 집값 비율)</strong> 순위와 맞춤형 자산 시각화 리포트를 제공합니다.
+                전국 42개 권역의 <strong>PIR(소득 대비 집값 비율)</strong> 순위와 맞춤형 자산 시각화 시뮬레이터를 제공합니다.
             </p>
 
             <div class="hero-meta-bar">
@@ -55,7 +55,7 @@
                 <div class="kpi-icon-wrap kpi-icon-emerald">🏡</div>
                 <div class="kpi-content">
                     <span class="kpi-label">가장 살기 쉬운 가성비 1위</span>
-                    <span class="kpi-value">지방 도지역 및 광역시</span>
+                    <span class="kpi-value">지방 주요 도지역 및 광역시</span>
                     <span class="kpi-sub">소득 대비 집값 부담 최소 (PIR 5.5~8년)</span>
                 </div>
             </div>
@@ -70,7 +70,167 @@
             </div>
         </section>
 
-        <!-- 3. AI 금융 자산 비서 질문 & 스마트 시각화 카드 -->
+        <!-- 3. [신규 핵심 기능] 내 소득 기반 지역별 주택 구입 소요 기간 시뮬레이터 -->
+        <section class="card simulator-card" id="simulatorSection">
+            <div class="card-header-styled">
+                <div class="card-title-group">
+                    <span>🧮</span>
+                    <h3>내 소득 기반 주택 구입 소요 기간 시뮬레이터</h3>
+                    <span class="tag-gold-pill">실시간 금융 시뮬레이션</span>
+                </div>
+                <p class="card-subtitle">
+                    내 연간 소득과 보유 자산, 저축률을 입력하면 실제 지역별 매매가격을 바탕으로 <strong>순수 저축 시 소요 기간</strong>과 <strong>대출 활용 시 기간</strong>을 즉시 산출합니다.
+                </p>
+            </div>
+
+            <div class="simulator-layout">
+                <!-- 좌측: 입력 폼 컨트롤 -->
+                <div class="sim-input-panel">
+                    <!-- 연간 소득 -->
+                    <div class="sim-group">
+                        <div class="sim-label-wrap">
+                            <label for="simIncome">나의 연간 세전 소득 (만원)</label>
+                            <span class="sim-val-badge" id="lblSimIncome">5,000만원</span>
+                        </div>
+                        <input type="range" id="simIncome" min="2000" max="20000" step="500" value="5000" class="sim-slider">
+                        <div class="slider-ticks">
+                            <span>2,000만</span>
+                            <span>5,000만</span>
+                            <span>1억</span>
+                            <span>1.5억</span>
+                            <span>2억원</span>
+                        </div>
+                    </div>
+
+                    <!-- 현재 보유 순자산 -->
+                    <div class="sim-group">
+                        <div class="sim-label-wrap">
+                            <label for="simAssets">현재 보유 자산 / 시드머니 (만원)</label>
+                            <span class="sim-val-badge" id="lblSimAssets">1억원</span>
+                        </div>
+                        <input type="range" id="simAssets" min="0" max="50000" step="1000" value="10000" class="sim-slider">
+                        <div class="slider-ticks">
+                            <span>0원</span>
+                            <span>5,000만</span>
+                            <span>1억원</span>
+                            <span>2.5억원</span>
+                            <span>5억원</span>
+                        </div>
+                    </div>
+
+                    <!-- 저축률 -->
+                    <div class="sim-group">
+                        <div class="sim-label-wrap">
+                            <label for="simSaveRate">월 소득 대비 저축률 (%)</label>
+                            <span class="sim-val-badge gold-badge" id="lblSimSaveRate">50% 저축</span>
+                        </div>
+                        <div class="rate-btn-group">
+                            <button type="button" class="btn-rate" data-rate="30">30% (여유)</button>
+                            <button type="button" class="btn-rate" data-rate="40">40% (보통)</button>
+                            <button type="button" class="btn-rate active" data-rate="50">50% (적극)</button>
+                            <button type="button" class="btn-rate" data-rate="60">60% (초절약)</button>
+                            <button type="button" class="btn-rate" data-rate="70">70% (극기)</button>
+                        </div>
+                        <input type="hidden" id="simSaveRate" value="50">
+                    </div>
+
+                    <!-- 목표 희망 지역 -->
+                    <div class="sim-group">
+                        <label for="simTargetRegion">🎯 목표 희망 지역 선택</label>
+                        <select id="simTargetRegion" class="sim-select">
+                            <!-- JS에서 42개 지역 동적 주입 -->
+                            <option value="서울" selected>서울 전체 (평균 10억 3,419만)</option>
+                        </select>
+                    </div>
+
+                    <!-- 대출 LTV 설정 -->
+                    <div class="sim-group">
+                        <label for="simLtv">🏦 주택담보대출(LTV) 활용 시뮬레이션</label>
+                        <select id="simLtv" class="sim-select">
+                            <option value="0">대출 없이 100% 순수 저축만</option>
+                            <option value="40" selected>LTV 40% 대출 활용 (규제지역 일반)</option>
+                            <option value="50">LTV 50% 대출 활용</option>
+                            <option value="70">LTV 70% 대출 활용 (생애최초/비규제)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 우측: 대형 결과 디스플레이 패널 -->
+                <div class="sim-result-panel">
+                    <div class="result-hero-box">
+                        <span class="hero-target-pill" id="resTargetRegionName">서울 전체 기준</span>
+                        <div class="hero-target-price">
+                            평균 매매가 <strong id="resTargetPrice">10억 3,419만원</strong>
+                        </div>
+
+                        <!-- 초대형 소요 기간 디스플레이 -->
+                        <div class="big-years-display">
+                            <span class="display-label">순수 저축 시 내 집 마련 소요 기간</span>
+                            <div class="years-number" id="resPureYears">
+                                37<span class="unit">년</span> 4<span class="unit">개월</span>
+                            </div>
+                            <span class="years-subtext" id="resAnnualSavingsText">
+                                연간 2,500만원 (월 약 208만원) 저축 기준
+                            </span>
+                        </div>
+
+                        <!-- 목표 달성률 게이지 -->
+                        <div class="goal-progress-section">
+                            <div class="goal-progress-header">
+                                <span>현재 보유 자산 기준 달성률</span>
+                                <strong id="resGoalPct">9.7%</strong>
+                            </div>
+                            <div class="goal-progress-bg">
+                                <div class="goal-progress-bar" id="resGoalBar" style="width: 9.7%;"></div>
+                            </div>
+                            <div class="goal-remain-info">
+                                추가 저축 필요 금액: <strong id="resNeededMoney">9억 3,419만원</strong>
+                            </div>
+                        </div>
+
+                        <!-- 대출 활용 시 대조 카드 -->
+                        <div class="loan-compare-box" id="loanCompareBox">
+                            <div class="loan-compare-header">
+                                <span class="loan-badge">🏦 대출(LTV <span id="resLtvVal">40</span>%) 활용 시</span>
+                                <span class="loan-time-saved" id="resTimeSaved">⏱ 약 16년 단축!</span>
+                            </div>
+                            <div class="loan-metrics-grid">
+                                <div class="loan-metric">
+                                    <span class="metric-title">자기자본 마련 기간</span>
+                                    <span class="metric-val" id="resLoanYears">20년 10개월</span>
+                                </div>
+                                <div class="loan-metric">
+                                    <span class="metric-title">대출 필요 금액</span>
+                                    <span class="metric-val" id="resLoanAmount">4억 1,368만원</span>
+                                </div>
+                                <div class="loan-metric">
+                                    <span class="metric-title">월 예상 원리금 (30년 4.2%)</span>
+                                    <span class="metric-val" id="resMonthlyRepay">월 약 202만원</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI 맞춤 전략 리포트 연동 버튼 -->
+                        <button type="button" id="btnAskAiStrategy" class="btn-ai-strategy">
+                            <span>🤖 이 조건으로 Gemini AI 맞춤 자산 전략 리포트 받기</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 시뮬레이터 차트: 내 조건 기준 주요 지역별 소요 기간 비교 막대 그래프 -->
+            <div class="sim-chart-container">
+                <div class="chart-header-styled">
+                    <h4>📊 내 저축액 기준 주요 지역별 내 집 마련 소요 기간 비교 (년)</h4>
+                    <span class="tag-file">실시간 계산 연동</span>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="simComparisonChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. AI 금융 자산 비서 질문 & 스마트 시각화 카드 -->
         <section class="card query-card">
             <div class="card-header-styled">
                 <div class="card-title-group">
@@ -137,7 +297,7 @@
             </div>
         </section>
 
-        <!-- 4. 전국 지역별 종합 랭킹 대시보드 (순위표) -->
+        <!-- 5. 전국 지역별 종합 랭킹 대시보드 (순위표) -->
         <section class="card ranking-card">
             <div class="ranking-header">
                 <div>

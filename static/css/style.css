@@ -189,7 +189,7 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 1.25rem;
-    margin-bottom: 2rem;
+    margin-bottom: 2.25rem;
 }
 
 .quick-kpi-card {
@@ -259,30 +259,401 @@ body {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     border: 1px solid var(--slate-200);
-    padding: 1.85rem;
-    margin-bottom: 2.25rem;
+    padding: 2rem;
+    margin-bottom: 2.5rem;
 }
 
 .card-header-styled {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
     border-bottom: 1px solid var(--slate-100);
-    padding-bottom: 0.85rem;
+    padding-bottom: 1rem;
 }
 
 .card-title-group {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 1.35rem;
+    gap: 0.6rem;
+    font-size: 1.4rem;
     font-weight: 800;
     color: var(--dark);
     letter-spacing: -0.01em;
+    flex-wrap: wrap;
 }
 
 .card-subtitle {
-    font-size: 0.925rem;
+    font-size: 0.95rem;
     color: var(--slate-500);
+    margin-top: 0.35rem;
+}
+
+.tag-gold-pill {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fcd34d;
+    font-size: 0.775rem;
+    font-weight: 700;
+    padding: 0.2rem 0.65rem;
+    border-radius: 9999px;
+}
+
+/* ==========================================================================
+   [신규 기능] 내 소득 기반 시뮬레이터 (Simulator Layout)
+   ========================================================================== */
+.simulator-card {
+    background: #ffffff;
+    border-top: 5px solid var(--gold);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.simulator-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* 좌측 입력 패널 */
+.sim-input-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.35rem;
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--slate-200);
+}
+
+.sim-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.sim-label-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.sim-label-wrap label, .sim-group label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.sim-val-badge {
+    background: #e2e8f0;
+    color: var(--dark);
+    font-size: 0.85rem;
+    font-weight: 800;
+    padding: 0.2rem 0.65rem;
+    border-radius: 6px;
+}
+
+.sim-val-badge.gold-badge {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+.sim-slider {
+    width: 100%;
+    height: 8px;
+    border-radius: 5px;
+    background: #cbd5e1;
+    outline: none;
+    -webkit-appearance: none;
+    cursor: pointer;
     margin-top: 0.25rem;
+}
+
+.sim-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #2563eb;
+    border: 3px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.sim-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+.slider-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.725rem;
+    color: var(--slate-400);
+    margin-top: 0.35rem;
+}
+
+.rate-btn-group {
+    display: flex;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+}
+
+.btn-rate {
+    flex: 1;
+    padding: 0.45rem 0.2rem;
+    background: var(--white);
+    border: 1.5px solid var(--slate-200);
+    color: var(--slate-600);
+    font-size: 0.775rem;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-rate:hover {
+    border-color: #f59e0b;
+    color: #d97706;
+}
+
+.btn-rate.active {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #b45309;
+}
+
+.sim-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+    border: 1.5px solid var(--slate-200);
+    border-radius: var(--radius-sm);
+    background-color: var(--white);
+    color: var(--dark);
+    margin-top: 0.35rem;
+    outline: none;
+    transition: var(--transition);
+}
+
+.sim-select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* 우측 대형 결과 패널 */
+.sim-result-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.result-hero-box {
+    background: linear-gradient(135deg, #090e1a 0%, #1e293b 100%);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    color: var(--white);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.hero-target-pill {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.15);
+    color: #93c5fd;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0.3rem 0.8rem;
+    border-radius: 9999px;
+    width: fit-content;
+    margin-bottom: 0.4rem;
+}
+
+.hero-target-price {
+    font-size: 1rem;
+    color: #cbd5e1;
+    margin-bottom: 1.25rem;
+}
+
+.hero-target-price strong {
+    color: #ffffff;
+    font-size: 1.25rem;
+    margin-left: 0.3rem;
+}
+
+/* 초대형 소요 기간 디스플레이 */
+.big-years-display {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-align: center;
+    margin-bottom: 1.25rem;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.display-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.01em;
+}
+
+.years-number {
+    font-size: 3.2rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    background: linear-gradient(120deg, #fef08a 0%, #f59e0b 60%, #fbbf24 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+
+.years-number .unit {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0.2rem;
+    -webkit-text-fill-color: #fde047;
+}
+
+.years-subtext {
+    display: block;
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    margin-top: 0.6rem;
+}
+
+/* 달성률 프로그레스 */
+.goal-progress-section {
+    margin-bottom: 1.25rem;
+}
+
+.goal-progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-bottom: 0.35rem;
+}
+
+.goal-progress-header strong {
+    color: #34d399;
+}
+
+.goal-progress-bg {
+    width: 100%;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+    overflow: hidden;
+    margin-bottom: 0.4rem;
+}
+
+.goal-progress-bar {
+    height: 100%;
+    border-radius: 9999px;
+    background: linear-gradient(to right, #10b981, #34d399);
+    transition: width 0.4s ease;
+}
+
+.goal-remain-info {
+    font-size: 0.825rem;
+    color: #cbd5e1;
+    text-align: right;
+}
+
+.goal-remain-info strong {
+    color: #f87171;
+}
+
+/* 대출 병행 시 비교 박스 */
+.loan-compare-box {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.15rem;
+    margin-bottom: 1.25rem;
+}
+
+.loan-compare-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.loan-badge {
+    font-size: 0.825rem;
+    font-weight: 700;
+    color: #60a5fa;
+}
+
+.loan-time-saved {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #34d399;
+}
+
+.loan-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+    text-align: center;
+}
+
+.loan-metric {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+.metric-title {
+    display: block;
+    font-size: 0.725rem;
+    color: #94a3b8;
+    margin-bottom: 0.2rem;
+}
+
+.metric-val {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+/* AI 맞춤 전략 버튼 */
+.btn-ai-strategy {
+    width: 100%;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.9rem 1.25rem;
+    font-size: 0.95rem;
+    font-weight: 800;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.btn-ai-strategy:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+/* 시뮬레이터 차트 */
+.sim-chart-container {
+    background: #f8fafc;
+    border: 1px solid var(--slate-200);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
 }
 
 /* ==========================================================================
@@ -796,6 +1167,10 @@ body {
 .d-none { display: none !important; }
 
 /* 모바일 대응 */
+@media (max-width: 900px) {
+    .simulator-layout { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 768px) {
     body { padding: 1rem 0.5rem 2rem; }
     .hero-banner { padding: 2rem 1.25rem; }
@@ -806,4 +1181,6 @@ body {
     .area-filter-group { width: 100%; justify-content: space-between; }
     .search-box input { width: 100%; }
     .quick-kpi-grid { grid-template-columns: 1fr; }
+    .years-number { font-size: 2.35rem; }
+    .loan-metrics-grid { grid-template-columns: 1fr; }
 }

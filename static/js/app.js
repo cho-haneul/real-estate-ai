@@ -59,17 +59,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnCopyAnswer = document.getElementById("btnCopyAnswer");
     const btnDownloadAnswerMd = document.getElementById("btnDownloadAnswerMd");
 
-    // DOM 요소 캐싱 - PWA 앱 설치
+    // DOM 요소 캐싱 - PWA 앱 설치 & 모바일 바
     const btnInstallApp = document.getElementById("btnInstallApp");
+    const mobileBottomBar = document.getElementById("mobileBottomBar");
+    const btnBottomInstall = document.getElementById("btnBottomInstall");
+    const btnDismissBottomBar = document.getElementById("btnDismissBottomBar");
     const installModal = document.getElementById("installModal");
     const installModalBackdrop = document.getElementById("installModalBackdrop");
     const modalCloseBtn = document.getElementById("modalCloseBtn");
     const btnModalConfirm = document.getElementById("btnModalConfirm");
     const modalDeviceTitle = document.getElementById("modalDeviceTitle");
+    const tabBtnAndroid = document.getElementById("tabBtnAndroid");
+    const tabBtnIos = document.getElementById("tabBtnIos");
     const viewAndroid = document.getElementById("viewAndroid");
     const viewIos = document.getElementById("viewIos");
     const btnDoInstallAndroid = document.getElementById("btnDoInstallAndroid");
     const inAppBrowserAlert = document.getElementById("inAppBrowserAlert");
+    const btnEscapeToChrome = document.getElementById("btnEscapeToChrome");
+    const iosEscapeGuide = document.getElementById("iosEscapeGuide");
 
     // ==========================================================================
     // 0. 카카오톡 / 인앱 브라우저 감지 & PWA 서비스 워커 및 설치 처리
@@ -78,64 +85,140 @@ document.addEventListener("DOMContentLoaded", () => {
     const isKakao = /KAKAOTALK/i.test(userAgent);
     const isNaver = /NAVER/i.test(userAgent);
     const isIos = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+    const isAndroid = /Android/i.test(userAgent);
 
-    // 카카오톡 내부 브라우저 경고 노출
+    // 카카오톡 내부 브라우저 감지 시
     if (isKakao || isNaver) {
         if (inAppBrowserAlert) inAppBrowserAlert.classList.remove("d-none");
+        if (isAndroid && btnEscapeToChrome) {
+            btnEscapeToChrome.classList.remove("d-none");
+            btnEscapeToChrome.addEventListener("click", () => {
+                // 안드로이드 크롬 인텐트로 즉시 외부 브라우저 호출
+                const targetUrl = window.location.href.replace(/https?:\/\//, "");
+                window.location.href = `intent://${targetUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+            });
+        } else if (isIos && iosEscapeGuide) {
+            iosEscapeGuide.classList.remove("d-none");
+        }
     }
 
+    // 서비스 워커 등록
     if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("/sw.js").catch(err => {
-            console.log("Service Worker 등록 실패 (무시 가능):", err);
+            console.log("Service Worker 등록 알림 (기본 동작):", err);
         });
     }
 
-    // 안드로이드 / 크롬 네이티브 설치 프롬프트 이벤트 캐치
+    // 안드로이드 / 크롬 네이티브 PWA 설치 프롬프트 이벤트 캐치
     window.addEventListener("beforeinstallprompt", (e) => {
         e.preventDefault();
         deferredInstallPrompt = e;
+        console.log("PWA 설치 프롬프트 준비 완료 (beforeinstallprompt)");
     });
 
-    // 헤더 [📲 앱 설치하기] 버튼 클릭
-    if (btnInstallApp) {
-        btnInstallApp.addEventListener("click", () => {
-            // 카카오톡이면 다른 브라우저 열기 우선 안내
-            if (isKakao) {
-                alert("현재 카카오톡 내부 브라우저입니다!\n\n우측 상단 점 3개(⋮)를 누르고 [다른 브라우저로 열기]를 눌러 Chrome이나 Safari로 열어주시면 앱 설치가 가능합니다.");
-                return;
-            }
+    // PWA가 홈 화면에 성공적으로 설치되었을 때
+    window.addEventListener("appinstalled", () => {
+        console.log("부동산AI 앱이 홈 화면에 설치되었습니다.");
+        if (btnInstallApp) {
+            btnInstallApp.innerHTML = `<span>✅ 설치 완료</span>`;
+            btnInstallApp.style.background = "#059669";
+        }
+        if (mobileBottomBar) {
+            mobileBottomBar.classList.add("d-none");
+        }
+        deferredInstallPrompt = null;
+    });
 
-            // 안드로이드에서 이미 프롬프트가 대기 중이면 바로 실행
-            if (!isIos && deferredInstallPrompt) {
-                deferredInstallPrompt.prompt();
-                deferredInstallPrompt.userChoice.then(() => {
-                    deferredInstallPrompt = null;
-                });
-            } else {
-                // 모달 가이드 열기
-                openInstallModal();
-            }
-        });
+    // 모달 기기 탭 전환 함수
+    function selectDeviceTab(platform) {
+        if (platform === "ios") {
+            if (tabBtnIos) tabBtnIos.classList.add("active");
+            if (tabBtnAndroid) tabBtnAndroid.classList.remove("active");
+            if (viewIos) viewIos.classList.remove("d-none");
+            if (viewAndroid) viewAndroid.classList.add("d-none");
+            if (modalDeviceTitle) modalDeviceTitle.textContent = "🍎 아이폰(Safari) 홈 화면에 설치하기";
+        } else {
+            if (tabBtnAndroid) tabBtnAndroid.classList.add("active");
+            if (tabBtnIos) tabBtnIos.classList.remove("active");
+            if (viewAndroid) viewAndroid.classList.remove("d-none");
+            if (viewIos) viewIos.classList.add("d-none");
+            if (modalDeviceTitle) modalDeviceTitle.textContent = "🤖 갤럭시(안드로이드) 홈 화면에 설치하기";
+        }
     }
 
+    if (tabBtnAndroid) {
+        tabBtnAndroid.addEventListener("click", () => selectDeviceTab("android"));
+    }
+    if (tabBtnIos) {
+        tabBtnIos.addEventListener("click", () => selectDeviceTab("ios"));
+    }
+
+    // 모달 열기/닫기
     function openInstallModal() {
         if (isIos) {
-            modalDeviceTitle.textContent = "🍎 아이폰(Safari) 홈 화면에 설치하기";
-            viewIos.classList.remove("d-none");
-            viewAndroid.classList.add("d-none");
+            selectDeviceTab("ios");
         } else {
-            modalDeviceTitle.textContent = "🤖 갤럭시(안드로이드) 홈 화면에 설치하기";
-            viewAndroid.classList.remove("d-none");
-            viewIos.classList.add("d-none");
+            selectDeviceTab("android");
         }
-        installModal.classList.remove("d-none");
+        if (installModal) installModal.classList.remove("d-none");
     }
 
     function closeInstallModal() {
-        installModal.classList.add("d-none");
+        if (installModal) installModal.classList.add("d-none");
     }
 
-    // 모달 내부 [지금 바로 스마트폰에 설치하기] 버튼
+    // 설치 프로세스 실행 (헤더 버튼 & 하단 플로팅 바 공통)
+    function handleInstallRequest() {
+        // 카카오톡 브라우저인 경우 먼저 안내
+        if (isKakao) {
+            if (isAndroid) {
+                const wantChrome = confirm("현재 카카오톡 내부 브라우저입니다!\n\n앱 설치를 위해 Chrome(크롬) 브라우저로 바로 이동하시겠습니까?");
+                if (wantChrome) {
+                    const targetUrl = window.location.href.replace(/https?:\/\//, "");
+                    window.location.href = `intent://${targetUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+                }
+            } else {
+                alert("현재 카카오톡 내부 브라우저입니다!\n\n우측 하단 점 3개(···) 또는 나침반 아이콘을 누르고 [Safari로 열기]를 눌러주시면 바로 설치할 수 있습니다.");
+            }
+            return;
+        }
+
+        // 안드로이드 / PC 크롬에서 네이티브 설치 프롬프트가 대기 중인 경우
+        if (!isIos && deferredInstallPrompt) {
+            deferredInstallPrompt.prompt();
+            deferredInstallPrompt.userChoice.then(choiceResult => {
+                if (choiceResult.outcome === "accepted") {
+                    console.log("사용자가 PWA 설치를 승인했습니다.");
+                    closeInstallModal();
+                } else {
+                    console.log("사용자가 PWA 설치를 취소했습니다.");
+                }
+                deferredInstallPrompt = null;
+            });
+        } else {
+            // 프롬프트가 미지원되거나 iOS인 경우 친절한 시각 가이드 모달 띄우기
+            openInstallModal();
+        }
+    }
+
+    // 상단 헤더 [📲 앱 설치하기] 버튼
+    if (btnInstallApp) {
+        btnInstallApp.addEventListener("click", handleInstallRequest);
+    }
+
+    // 모바일 하단 플로팅 바 [지금 설치] 버튼
+    if (btnBottomInstall) {
+        btnBottomInstall.addEventListener("click", handleInstallRequest);
+    }
+
+    // 모바일 하단 플로팅 바 닫기 버튼
+    if (btnDismissBottomBar) {
+        btnDismissBottomBar.addEventListener("click", () => {
+            if (mobileBottomBar) mobileBottomBar.classList.add("d-none");
+        });
+    }
+
+    // 모달 내부 [지금 바로 스마트폰에 설치] 버튼 클릭 시
     if (btnDoInstallAndroid) {
         btnDoInstallAndroid.addEventListener("click", () => {
             if (deferredInstallPrompt) {
@@ -147,7 +230,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     deferredInstallPrompt = null;
                 });
             } else {
-                alert("브라우저 우측 상단의 점 3개(⋮) 버튼을 누르고 [홈 화면에 추가] 또는 [앱 설치]를 선택해 주세요!");
+                // 프롬프트가 바로 뜨지 않는 브라우저(삼성인터넷 등)를 위한 친절한 알림
+                alert("브라우저 우측 상단 점 3개(⋮)를 누르고 [홈 화면에 추가] 또는 [앱 설치]를 선택해 주세요!\n(삼성인터넷은 우측 하단 줄 3개 ≡ 메뉴)");
             }
         });
     }

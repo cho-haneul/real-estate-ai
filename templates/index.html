@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>AI 대한민국 부동산 & 자산 랭킹 인텔리전스</title>
     
     <!-- PWA Web App Manifest & Mobile Meta -->
@@ -12,7 +12,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="부동산AI">
-    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
 
     <!-- Pretendard Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,20 +25,34 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- 카카오톡 인앱 브라우저 감지 경고 배너 -->
+        <!-- 카카오톡 인앱 브라우저 감지 시 뜨는 원클릭 탈출 배너 -->
         <div id="inAppBrowserAlert" class="inapp-alert d-none">
-            <span>⚠️ <strong>카카오톡 브라우저</strong>에서는 앱 설치가 제한됩니다. 우측 상단/하단 <strong>[⋮]</strong> ➔ <strong>[다른 브라우저로 열기]</strong>를 눌러주세요!</span>
+            <div class="inapp-alert-icon">⚠️</div>
+            <div class="inapp-alert-content">
+                <div class="inapp-alert-title">카카오톡 브라우저에서는 홈 화면 앱 설치가 차단됩니다!</div>
+                <div class="inapp-alert-desc" id="inAppBrowserDesc">
+                    원활한 앱 설치 및 빠른 이용을 위해 <strong>Chrome(크롬)</strong> 또는 <strong>Safari(사파리)</strong>로 열어주세요.
+                </div>
+                <div class="inapp-alert-actions">
+                    <button type="button" id="btnEscapeToChrome" class="btn-escape-chrome d-none">
+                        🚀 크롬으로 바로 열기 (원클릭)
+                    </button>
+                    <div id="iosEscapeGuide" class="ios-escape-hint d-none">
+                        👉 화면 우측 하단 <strong>[···]</strong> 또는 <strong>[나침반]</strong> 아이콘 ➔ <strong>[Safari로 열기]</strong>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- 1. 프리미엄 금융 & 부동산 히어로 배너 -->
         <header class="hero-banner">
             <div class="hero-top-row">
                 <div class="hero-badge-group">
-                    <span class="badge-fintech">💎 대한민국 자산 & 부동산 금융 대시보드</span>
+                    <span class="badge-fintech">💎 부동산 & 자산 금융 인텔리전스</span>
                     <span class="badge-status" id="dataStatusBadge">🟢 데이터 연동 정상 ({{ total_regions }}개 지역)</span>
                 </div>
-                <!-- [핵심] 모바일 및 데스크톱 앱 즉시 설치 버튼 -->
-                <button type="button" id="btnInstallApp" class="btn-install-app" title="스마트폰 홈 화면에 앱으로 설치합니다">
+                <!-- 상단 앱 설치 버튼 -->
+                <button type="button" id="btnInstallApp" class="btn-install-app" title="스마트폰 홈 화면에 앱으로 설치">
                     <span class="install-pulse"></span>
                     <span class="install-icon">📲</span>
                     <span class="install-text">앱 설치하기</span>
@@ -48,7 +62,7 @@
             <h1>소득 수준별 <span class="hero-highlight">부동산 자산 가치</span> & 내 집 마련 랭킹</h1>
             <p class="hero-desc">
                 실제 국세청 <strong>근로소득 연말정산 통계</strong>와 한국부동산원 <strong>실거래 평균 매매가</strong>를 정밀 결합하여, 
-                전국 42개 권역의 <strong>PIR(소득 대비 집값 비율)</strong> 순위와 맞춤형 자산 시각화 시뮬레이터를 제공합니다.
+                전국 42개 권역의 <strong>PIR(소득 대비 집값 비율)</strong> 순위와 맞춤형 자산 시뮬레이터를 제공합니다.
             </p>
 
             <div class="hero-meta-bar">
@@ -94,13 +108,13 @@
             </div>
         </section>
 
-        <!-- 3. [신규 핵심 기능] 내 소득 기반 지역별 주택 구입 소요 기간 시뮬레이터 -->
+        <!-- 3. [핵심 기능] 내 소득 기반 지역별 주택 구입 소요 기간 시뮬레이터 -->
         <section class="card simulator-card" id="simulatorSection">
             <div class="card-header-styled">
                 <div class="card-title-group">
                     <span>🧮</span>
                     <h3>내 소득 기반 주택 구입 소요 기간 시뮬레이터</h3>
-                    <span class="tag-gold-pill">실시간 금융 시뮬레이션</span>
+                    <span class="tag-gold-pill">실시간 계산 연동</span>
                 </div>
                 <p class="card-subtitle">
                     내 연간 소득과 보유 자산, 저축률을 입력하면 실제 지역별 매매가격을 바탕으로 <strong>순수 저축 시 소요 기간</strong>과 <strong>대출 활용 시 기간</strong>을 즉시 산출합니다.
@@ -113,13 +127,13 @@
                     <!-- 연간 소득 -->
                     <div class="sim-group">
                         <div class="sim-label-wrap">
-                            <label for="simIncome">나의 연간 세전 소득 (만원)</label>
+                            <label for="simIncome">나의 연간 세전 소득</label>
                             <span class="sim-val-badge" id="lblSimIncome">5,000만원</span>
                         </div>
                         <input type="range" id="simIncome" min="2000" max="20000" step="500" value="5000" class="sim-slider">
                         <div class="slider-ticks">
-                            <span>2,000만</span>
-                            <span>5,000만</span>
+                            <span>2천만</span>
+                            <span>5천만</span>
                             <span>1억</span>
                             <span>1.5억</span>
                             <span>2억원</span>
@@ -129,13 +143,13 @@
                     <!-- 현재 보유 순자산 -->
                     <div class="sim-group">
                         <div class="sim-label-wrap">
-                            <label for="simAssets">현재 보유 자산 / 시드머니 (만원)</label>
+                            <label for="simAssets">현재 보유 자산 (시드머니)</label>
                             <span class="sim-val-badge" id="lblSimAssets">1억원</span>
                         </div>
                         <input type="range" id="simAssets" min="0" max="50000" step="1000" value="10000" class="sim-slider">
                         <div class="slider-ticks">
                             <span>0원</span>
-                            <span>5,000만</span>
+                            <span>5천만</span>
                             <span>1억원</span>
                             <span>2.5억원</span>
                             <span>5억원</span>
@@ -145,15 +159,15 @@
                     <!-- 저축률 -->
                     <div class="sim-group">
                         <div class="sim-label-wrap">
-                            <label for="simSaveRate">월 소득 대비 저축률 (%)</label>
+                            <label for="simSaveRate">월 소득 대비 저축률</label>
                             <span class="sim-val-badge gold-badge" id="lblSimSaveRate">50% 저축</span>
                         </div>
                         <div class="rate-btn-group">
-                            <button type="button" class="btn-rate" data-rate="30">30% (여유)</button>
-                            <button type="button" class="btn-rate" data-rate="40">40% (보통)</button>
-                            <button type="button" class="btn-rate active" data-rate="50">50% (적극)</button>
-                            <button type="button" class="btn-rate" data-rate="60">60% (초절약)</button>
-                            <button type="button" class="btn-rate" data-rate="70">70% (극기)</button>
+                            <button type="button" class="btn-rate" data-rate="30">30%</button>
+                            <button type="button" class="btn-rate" data-rate="40">40%</button>
+                            <button type="button" class="btn-rate active" data-rate="50">50%</button>
+                            <button type="button" class="btn-rate" data-rate="60">60%</button>
+                            <button type="button" class="btn-rate" data-rate="70">70%</button>
                         </div>
                         <input type="hidden" id="simSaveRate" value="50">
                     </div>
@@ -324,7 +338,7 @@
                         <h2>전국 지역별 부동산 자산 & 소득 종합 순위표</h2>
                     </div>
                     <p class="card-subtitle">
-                        국세청 시도·시군구별 근로소득 연말정산과 한국부동산원 최신 매매가격 통계(42개 권역)를 바탕으로 실시간 집계된 랭킹입니다.
+                        국세청 근로소득 연말정산과 한국부동산원 최신 매매가격 통계(42개 권역)를 바탕으로 실시간 집계된 랭킹입니다.
                     </p>
                 </div>
                 <div class="area-filter-group">
@@ -355,13 +369,18 @@
                 </div>
             </div>
 
+            <!-- 모바일용 가로 스크롤 안내 -->
+            <div class="mobile-table-hint">
+                <span>👈 표를 좌우로 밀어서 42개 권역 전체 통계를 확인하세요 👉</span>
+            </div>
+
             <div class="table-responsive">
                 <table class="ranking-table" id="rankingTable">
                     <thead>
                         <tr>
-                            <th style="width: 80px; text-align: center;">순위</th>
+                            <th style="width: 70px; text-align: center;">순위</th>
                             <th>권역 / 지역명</th>
-                            <th>평균 주택 매매가 (만원)</th>
+                            <th>평균 주택 매매가</th>
                             <th>1인당 평균 근로소득</th>
                             <th>PIR (소득 소요 연수)</th>
                             <th>내 집 마련 부담 수준</th>
@@ -378,50 +397,105 @@
         </section>
     </div>
 
-    <!-- 모바일 앱 설치 안내 모달 (실제 설치 버튼 탑재) -->
+    <!-- 모바일 하단 플로팅 설치 바 (스마트폰 전용 고정 배너) -->
+    <div id="mobileBottomBar" class="mobile-bottom-bar">
+        <div class="bar-info">
+            <span class="bar-icon">📲</span>
+            <div class="bar-text">
+                <strong>부동산AI 스마트폰 앱</strong>
+                <span>홈 화면에 1초 설치하고 편하게 이용</span>
+            </div>
+        </div>
+        <div class="bar-actions">
+            <button type="button" id="btnBottomInstall" class="btn-bar-install">지금 설치</button>
+            <button type="button" id="btnDismissBottomBar" class="btn-bar-dismiss" aria-label="닫기">&times;</button>
+        </div>
+    </div>
+
+    <!-- 모바일 앱 설치 안내 모달 -->
     <div id="installModal" class="install-modal d-none">
         <div class="install-modal-backdrop" id="installModalBackdrop"></div>
         <div class="install-modal-content">
-            <button type="button" class="modal-close-btn" id="modalCloseBtn">&times;</button>
+            <button type="button" class="modal-close-btn" id="modalCloseBtn" aria-label="닫기">&times;</button>
             <div class="modal-icon-wrap">📲</div>
-            <h3 id="modalDeviceTitle">스마트폰 홈 화면에 바로 설치하기</h3>
-            <p class="modal-desc">앱스토어 다운로드 없이, 1초 만에 스마트폰 바탕화면에 진짜 앱 아이콘으로 설치됩니다.</p>
+            <h3 id="modalDeviceTitle">스마트폰 홈 화면에 바로 설치</h3>
+            <p class="modal-desc">앱스토어 다운로드 없이, 스마트폰 바탕화면에 진짜 앱 아이콘으로 바로 추가됩니다.</p>
+
+            <!-- 기기 전환 탭 버튼 -->
+            <div class="modal-device-tabs">
+                <button type="button" class="device-tab-btn active" id="tabBtnAndroid">🤖 갤럭시 (안드로이드)</button>
+                <button type="button" class="device-tab-btn" id="tabBtnIos">🍎 아이폰 (Safari)</button>
+            </div>
 
             <!-- 안드로이드 / 갤럭시 전용 뷰 -->
             <div id="viewAndroid" class="device-install-view">
+                <!-- 네이티브 설치 버튼 -->
                 <button type="button" id="btnDoInstallAndroid" class="btn-do-install">
-                    <span>🚀 지금 바로 스마트폰에 설치하기</span>
+                    <span>🚀 [지금 바로 스마트폰에 설치] 터치</span>
                 </button>
+                <p class="install-action-subtext">위 버튼을 누르면 스마트폰 하단에 설치 확인창이 뜹니다.</p>
+
+                <!-- 수동 설치 2단계 가이드 (프롬프트 미지원 / 브라우저 전용) -->
                 <div class="manual-guide-box">
-                    <strong>혹시 위 버튼을 눌러도 설치창이 안 뜬다면?</strong>
-                    <p>현재 열려있는 브라우저(크롬/삼성인터넷) 우측 상단 <strong>점 3개(⋮)</strong>를 누르고 <strong>[홈 화면에 추가]</strong> 또는 <strong>[앱 설치]</strong>를 선택해 주세요!</p>
+                    <div class="manual-guide-title">
+                        <span>💡</span>
+                        <strong>위 버튼을 눌러도 반응이 없다면? (수동 3초 설치)</strong>
+                    </div>
+                    <div class="guide-step-row">
+                        <span class="step-num">1</span>
+                        <div class="guide-step-desc">
+                            브라우저(크롬/삼성인터넷) 우측 상단 <strong>점 3개(⋮)</strong> 터치<br>
+                            <small>(삼성인터넷 브라우저는 화면 우측 하단 <strong>줄 3개 ≡</strong> 터치)</small>
+                        </div>
+                    </div>
+                    <div class="guide-step-row">
+                        <span class="step-num">2</span>
+                        <div class="guide-step-desc">
+                            메뉴에서 <strong>[홈 화면에 추가]</strong> 또는 <strong>[앱 설치]</strong> 선택
+                        </div>
+                    </div>
+                    <div class="guide-step-row">
+                        <span class="step-num">3</span>
+                        <div class="guide-step-desc">
+                            팝업에서 <strong>[추가]</strong> 또는 <strong>[설치]</strong>를 누르면 바탕화면에 바로 설치 완료!
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- 아이폰 / 사파리 전용 뷰 -->
             <div id="viewIos" class="device-install-view d-none">
+                <div class="ios-notice-banner">
+                    📌 <strong>아이폰(iOS) 설치 안내:</strong><br>
+                    애플 보안 정책상 <strong>Safari(사파리) 브라우저</strong> 하단의 공유 버튼을 통해 3초 만에 홈 화면에 추가할 수 있습니다.
+                </div>
                 <div class="ios-instruction-box">
                     <div class="ios-step-row">
                         <span class="step-num">1</span>
                         <div class="step-text">
-                            화면 맨 아래 가운데 <strong>[공유 아이콘 📤]</strong>을 터치합니다.
-                            <span class="step-subtext">(네모에 위로 솟은 화살표 모양)</span>
+                            사파리 화면 맨 아래 가운데 <strong>[공유 아이콘 📤]</strong> 터치
+                            <span class="step-subtext">(네모 상자 위로 화살표가 솟은 모양)</span>
                         </div>
                     </div>
                     <div class="ios-step-row">
                         <span class="step-num">2</span>
                         <div class="step-text">
-                            메뉴를 아래로 살짝 내려 <strong>[홈 화면에 추가 ➕]</strong>를 터치합니다.
+                            메뉴 목록을 아래로 내려 <strong>[홈 화면에 추가 ➕]</strong> 터치
                         </div>
                     </div>
                     <div class="ios-step-row">
                         <span class="step-num">3</span>
                         <div class="step-text">
-                            오른쪽 상단 <strong>[추가]</strong>를 누르면 바탕화면에 바로 설치 완료!
+                            오른쪽 상단 <strong>[추가]</strong>를 누르면 스마트폰 바탕화면에 즉시 설치 완료!
                         </div>
                     </div>
                 </div>
-                <button type="button" class="btn-modal-confirm" id="btnModalConfirm">확인했습니다 👍</button>
+            </div>
+
+            <!-- 가이드 닫기 버튼 -->
+            <div class="modal-footer-box">
+                <button type="button" class="btn-modal-close" id="btnModalConfirm">가이드 닫기</button>
+                <div class="modal-footer-tip">※ 홈 화면에 추가하면 웹 브라우저 주소창 없이 진짜 앱처럼 넓게 열립니다.</div>
             </div>
         </div>
     </div>

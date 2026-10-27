@@ -1,19 +1,6 @@
-const CACHE_NAME = 'real-estate-ai-v1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/static/css/style.css',
-  '/static/js/app.js',
-  '/static/manifest.json',
-  '/static/icons/icon-192.png',
-  '/static/icons/icon-512.png'
-];
+const CACHE_NAME = 'real-estate-ai-v2';
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE).catch(() => {});
-    })
-  );
   self.skipWaiting();
 });
 
@@ -33,8 +20,9 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Let network handle dynamic requests, fallback to cache if offline
   if (event.request.method !== 'GET') return;
-
+  
   event.respondWith(
     fetch(event.request).catch(() => {
       return caches.match(event.request);

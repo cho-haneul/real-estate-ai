@@ -25,6 +25,11 @@
 </head>
 <body>
     <div class="app-container">
+        <!-- 카카오톡 인앱 브라우저 감지 경고 배너 -->
+        <div id="inAppBrowserAlert" class="inapp-alert d-none">
+            <span>⚠️ <strong>카카오톡 브라우저</strong>에서는 앱 설치가 제한됩니다. 우측 상단/하단 <strong>[⋮]</strong> ➔ <strong>[다른 브라우저로 열기]</strong>를 눌러주세요!</span>
+        </div>
+
         <!-- 1. 프리미엄 금융 & 부동산 히어로 배너 -->
         <header class="hero-banner">
             <div class="hero-top-row">
@@ -157,7 +162,6 @@
                     <div class="sim-group">
                         <label for="simTargetRegion">🎯 목표 희망 지역 선택</label>
                         <select id="simTargetRegion" class="sim-select">
-                            <!-- JS에서 42개 지역 동적 주입 -->
                             <option value="서울" selected>서울 전체 (평균 10억 3,419만)</option>
                         </select>
                     </div>
@@ -237,7 +241,7 @@
                 </div>
             </div>
 
-            <!-- 시뮬레이터 차트: 내 조건 기준 주요 지역별 소요 기간 비교 막대 그래프 -->
+            <!-- 시뮬레이터 차트 -->
             <div class="sim-chart-container">
                 <div class="chart-header-styled">
                     <h4>📊 내 저축액 기준 주요 지역별 내 집 마련 소요 기간 비교 (년)</h4>
@@ -270,7 +274,6 @@
                 </div>
             </form>
 
-            <!-- 센스 있는 추천 질문 칩 -->
             <div class="suggested-queries">
                 <span class="suggest-label">💡 추천 질문:</span>
                 <button type="button" class="btn-chip" data-q="소득 대비 집을 사기 가장 수월한 지역 Top 5는 어디야?">💸 가성비 내 집 마련 Top 5</button>
@@ -279,16 +282,13 @@
                 <button type="button" class="btn-chip" data-q="연봉 5천만원 기준 대출 상환이 가장 현실적인 수도권 지역은?">🎯 연봉 5천만원 추천 지역</button>
             </div>
 
-            <!-- AI 로딩 애니메이션 -->
             <div id="aiLoadingIndicator" class="loading-container d-none">
                 <div class="spinner"></div>
                 <div class="loading-text" id="aiLoadingText">실제 국세청 소득 통계 및 실거래가 정밀 연산 중...</div>
                 <div class="loading-subtext">Google Gemini 최신 금융 인공지능이 통계 수치를 교차 검증하고 있습니다.</div>
             </div>
 
-            <!-- AI 결과 및 맞춤형 차트 -->
             <div id="aiResultArea" class="ai-result-area d-none">
-                <!-- 동적 차트 박스 -->
                 <div class="dynamic-chart-box">
                     <div class="chart-header-styled">
                         <h4 id="dynamicChartTitle">📈 질문 관련 통계 시각화</h4>
@@ -299,7 +299,6 @@
                     </div>
                 </div>
 
-                <!-- AI 전문 분석 리포트 -->
                 <div class="ai-response-box">
                     <div class="ai-box-header">
                         <div class="ai-title-wrap">
@@ -328,7 +327,6 @@
                         국세청 시도·시군구별 근로소득 연말정산과 한국부동산원 최신 매매가격 통계(42개 권역)를 바탕으로 실시간 집계된 랭킹입니다.
                     </p>
                 </div>
-                <!-- 지역 필터 탭 -->
                 <div class="area-filter-group">
                     <button type="button" class="btn-filter active" data-area="all">전국 전체</button>
                     <button type="button" class="btn-filter" data-area="capital">수도권 (서울/경기/인천)</button>
@@ -336,7 +334,6 @@
                 </div>
             </div>
 
-            <!-- 정렬 탭 & 실시간 검색바 -->
             <div class="ranking-controls">
                 <div class="sort-tab-group">
                     <button type="button" class="tab-btn active" data-sort="pir">
@@ -358,7 +355,6 @@
                 </div>
             </div>
 
-            <!-- 순위 표 테이블 -->
             <div class="table-responsive">
                 <table class="ranking-table" id="rankingTable">
                     <thead>
@@ -372,7 +368,6 @@
                         </tr>
                     </thead>
                     <tbody id="rankingTableBody">
-                        <!-- JS에서 동적 주입 -->
                     </tbody>
                 </table>
             </div>
@@ -383,34 +378,51 @@
         </section>
     </div>
 
-    <!-- 모바일 앱 설치 안내 모달 (iOS / Android 공용) -->
+    <!-- 모바일 앱 설치 안내 모달 (실제 설치 버튼 탑재) -->
     <div id="installModal" class="install-modal d-none">
         <div class="install-modal-backdrop" id="installModalBackdrop"></div>
         <div class="install-modal-content">
             <button type="button" class="modal-close-btn" id="modalCloseBtn">&times;</button>
             <div class="modal-icon-wrap">📲</div>
-            <h3>스마트폰 홈 화면에 바로 설치하기</h3>
-            <p class="modal-desc">앱스토어 다운로드 없이, 1초 만에 스마트폰 바탕화면에 진짜 앱처럼 바로 설치됩니다!</p>
+            <h3 id="modalDeviceTitle">스마트폰 홈 화면에 바로 설치하기</h3>
+            <p class="modal-desc">앱스토어 다운로드 없이, 1초 만에 스마트폰 바탕화면에 진짜 앱 아이콘으로 설치됩니다.</p>
 
-            <div class="install-steps">
-                <!-- 안드로이드 / 크롬 안내 -->
-                <div class="step-card" id="stepAndroid">
-                    <div class="step-title">🤖 갤럭시 (안드로이드 / 삼성인터넷 / 크롬)</div>
-                    <p>지금 바로 뜬 <strong>[설치]</strong> 또는 <strong>[홈 화면에 추가]</strong> 버튼을 누르면 즉시 설치됩니다.</p>
-                </div>
-
-                <!-- 아이폰 사파리 안내 -->
-                <div class="step-card" id="stepIos">
-                    <div class="step-title">🍎 아이폰 / 아이패드 (Safari)</div>
-                    <ol>
-                        <li>화면 하단 가운데 <strong>[공유(Share) 버튼]</strong> (네모에 위 화살표 아이콘 📤)을 누릅니다.</li>
-                        <li>메뉴를 살짝 올려 <strong>[홈 화면에 추가]</strong>를 누릅니다.</li>
-                        <li>오른쪽 상단 <strong>[추가]</strong>를 누르면 바탕화면에 바로 생성됩니다!</li>
-                    </ol>
+            <!-- 안드로이드 / 갤럭시 전용 뷰 -->
+            <div id="viewAndroid" class="device-install-view">
+                <button type="button" id="btnDoInstallAndroid" class="btn-do-install">
+                    <span>🚀 지금 바로 스마트폰에 설치하기</span>
+                </button>
+                <div class="manual-guide-box">
+                    <strong>혹시 위 버튼을 눌러도 설치창이 안 뜬다면?</strong>
+                    <p>현재 열려있는 브라우저(크롬/삼성인터넷) 우측 상단 <strong>점 3개(⋮)</strong>를 누르고 <strong>[홈 화면에 추가]</strong> 또는 <strong>[앱 설치]</strong>를 선택해 주세요!</p>
                 </div>
             </div>
 
-            <button type="button" class="btn-modal-confirm" id="btnModalConfirm">알겠습니다 👍</button>
+            <!-- 아이폰 / 사파리 전용 뷰 -->
+            <div id="viewIos" class="device-install-view d-none">
+                <div class="ios-instruction-box">
+                    <div class="ios-step-row">
+                        <span class="step-num">1</span>
+                        <div class="step-text">
+                            화면 맨 아래 가운데 <strong>[공유 아이콘 📤]</strong>을 터치합니다.
+                            <span class="step-subtext">(네모에 위로 솟은 화살표 모양)</span>
+                        </div>
+                    </div>
+                    <div class="ios-step-row">
+                        <span class="step-num">2</span>
+                        <div class="step-text">
+                            메뉴를 아래로 살짝 내려 <strong>[홈 화면에 추가 ➕]</strong>를 터치합니다.
+                        </div>
+                    </div>
+                    <div class="ios-step-row">
+                        <span class="step-num">3</span>
+                        <div class="step-text">
+                            오른쪽 상단 <strong>[추가]</strong>를 누르면 바탕화면에 바로 설치 완료!
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn-modal-confirm" id="btnModalConfirm">확인했습니다 👍</button>
+            </div>
         </div>
     </div>
 

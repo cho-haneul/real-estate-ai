@@ -65,61 +65,91 @@ document.addEventListener("DOMContentLoaded", () => {
     const installModalBackdrop = document.getElementById("installModalBackdrop");
     const modalCloseBtn = document.getElementById("modalCloseBtn");
     const btnModalConfirm = document.getElementById("btnModalConfirm");
-    const stepAndroid = document.getElementById("stepAndroid");
-    const stepIos = document.getElementById("stepIos");
+    const modalDeviceTitle = document.getElementById("modalDeviceTitle");
+    const viewAndroid = document.getElementById("viewAndroid");
+    const viewIos = document.getElementById("viewIos");
+    const btnDoInstallAndroid = document.getElementById("btnDoInstallAndroid");
+    const inAppBrowserAlert = document.getElementById("inAppBrowserAlert");
 
     // ==========================================================================
-    // 0. PWA 서비스 워커 등록 및 설치 프롬프트 바인딩
+    // 0. 카카오톡 / 인앱 브라우저 감지 & PWA 서비스 워커 및 설치 처리
     // ==========================================================================
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isKakao = /KAKAOTALK/i.test(userAgent);
+    const isNaver = /NAVER/i.test(userAgent);
+    const isIos = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+
+    // 카카오톡 내부 브라우저 경고 노출
+    if (isKakao || isNaver) {
+        if (inAppBrowserAlert) inAppBrowserAlert.classList.remove("d-none");
+    }
+
     if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("/sw.js").catch(err => {
             console.log("Service Worker 등록 실패 (무시 가능):", err);
         });
     }
 
-    // 안드로이드 / 크롬 네이티브 설치 프롬프트 캡처
+    // 안드로이드 / 크롬 네이티브 설치 프롬프트 이벤트 캐치
     window.addEventListener("beforeinstallprompt", (e) => {
         e.preventDefault();
         deferredInstallPrompt = e;
-        if (btnInstallApp) {
-            btnInstallApp.classList.remove("d-none");
-        }
     });
 
-    // 앱 설치 버튼 클릭 이벤트
+    // 헤더 [📲 앱 설치하기] 버튼 클릭
     if (btnInstallApp) {
-        btnInstallApp.addEventListener("click", async () => {
-            if (deferredInstallPrompt) {
-                // 안드로이드 / 크롬 설치 팝업 즉시 실행
+        btnInstallApp.addEventListener("click", () => {
+            // 카카오톡이면 다른 브라우저 열기 우선 안내
+            if (isKakao) {
+                alert("현재 카카오톡 내부 브라우저입니다!\n\n우측 상단 점 3개(⋮)를 누르고 [다른 브라우저로 열기]를 눌러 Chrome이나 Safari로 열어주시면 앱 설치가 가능합니다.");
+                return;
+            }
+
+            // 안드로이드에서 이미 프롬프트가 대기 중이면 바로 실행
+            if (!isIos && deferredInstallPrompt) {
                 deferredInstallPrompt.prompt();
-                const choiceResult = await deferredInstallPrompt.userChoice;
-                if (choiceResult.outcome === "accepted") {
-                    console.log("사용자가 앱 설치를 수락했습니다.");
-                }
-                deferredInstallPrompt = null;
+                deferredInstallPrompt.userChoice.then(() => {
+                    deferredInstallPrompt = null;
+                });
             } else {
-                // 아이폰 또는 네이티브 프롬프트가 지원되지 않는 경우 모달 가이드 표시
+                // 모달 가이드 열기
                 openInstallModal();
             }
         });
     }
 
     function openInstallModal() {
-        const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         if (isIos) {
-            stepIos.style.border = "2px solid #2563eb";
-            stepIos.style.background = "#eff6ff";
-            stepAndroid.style.opacity = "0.6";
+            modalDeviceTitle.textContent = "🍎 아이폰(Safari) 홈 화면에 설치하기";
+            viewIos.classList.remove("d-none");
+            viewAndroid.classList.add("d-none");
         } else {
-            stepAndroid.style.border = "2px solid #10b981";
-            stepAndroid.style.background = "#ecfdf5";
-            stepIos.style.opacity = "0.6";
+            modalDeviceTitle.textContent = "🤖 갤럭시(안드로이드) 홈 화면에 설치하기";
+            viewAndroid.classList.remove("d-none");
+            viewIos.classList.add("d-none");
         }
         installModal.classList.remove("d-none");
     }
 
     function closeInstallModal() {
         installModal.classList.add("d-none");
+    }
+
+    // 모달 내부 [지금 바로 스마트폰에 설치하기] 버튼
+    if (btnDoInstallAndroid) {
+        btnDoInstallAndroid.addEventListener("click", () => {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                deferredInstallPrompt.userChoice.then(choice => {
+                    if (choice.outcome === "accepted") {
+                        closeInstallModal();
+                    }
+                    deferredInstallPrompt = null;
+                });
+            } else {
+                alert("브라우저 우측 상단의 점 3개(⋮) 버튼을 누르고 [홈 화면에 추가] 또는 [앱 설치]를 선택해 주세요!");
+            }
+        });
     }
 
     if (modalCloseBtn) modalCloseBtn.addEventListener("click", closeInstallModal);
@@ -131,7 +161,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================================================
     fetchRankings();
 
-    // 2. 랭킹 데이터 API 호출 및 렌더링
     async function fetchRankings() {
         try {
             rankingTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2.5rem; color: #64748b;">📊 국세청 소득 및 부동산원 통계 집계 중...</td></tr>`;
@@ -156,7 +185,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 3. 랭킹 테이블 렌더링 (부동산 & 자산 테마 디자인 적용)
     function renderRankingTable(data) {
         if (!data || data.length === 0) {
             rankingTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2.5rem; color: #64748b;">조건에 일치하는 지역이 없습니다.</td></tr>`;
@@ -170,13 +198,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const tr = document.createElement("tr");
             if (rank === 1) tr.classList.add("row-rank-1");
 
-            // 순위 뱃지 스타일
             let rankBadgeHtml = `<span class="rank-badge rank-other">${rank}</span>`;
             if (rank === 1) rankBadgeHtml = `<span class="rank-badge rank-1" title="1위">🥇</span>`;
             else if (rank === 2) rankBadgeHtml = `<span class="rank-badge rank-2" title="2위">🥈</span>`;
             else if (rank === 3) rankBadgeHtml = `<span class="rank-badge rank-3" title="3위">🥉</span>`;
 
-            // PIR 수준 판정 및 태그
             let levelTag = `<span class="level-tag level-normal">🏡 적정 부담</span>`;
             if (row.pir >= 20) {
                 levelTag = `<span class="level-tag level-extreme">🔥 극심한 부담</span>`;
@@ -184,10 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 levelTag = `<span class="level-tag level-high">⚠️ 높은 부담</span>`;
             }
 
-            // 게이지 바 퍼센트 (PIR 40년을 100% 기준으로 산정)
             const fillPct = Math.min(Math.round((row.pir / 40.0) * 100), 100);
-
-            // 월 환산 추정 소득
             const monthlyIncome = Math.round(row.avg_income_manwon / 12);
 
             tr.innerHTML = `
@@ -218,7 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==========================================================================
-    // 4. 내 소득 기반 주택 구입 소요 기간 시뮬레이터 로직
+    // 2. 내 소득 기반 주택 구입 소요 기간 시뮬레이터 로직
     // ==========================================================================
 
     function populateSimulatorRegions(data) {
@@ -422,7 +445,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ==========================================================================
-    // 5. 정렬, 필터, 검색 이벤트
+    // 3. 정렬, 필터, 검색 이벤트
     // ==========================================================================
     tabButtons.forEach(btn => {
         btn.addEventListener("click", () => {
@@ -459,7 +482,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ==========================================================================
-    // 6. 질문 폼 제출 처리 (Gemini AI 질의응답)
+    // 4. 질문 폼 제출 처리 (Gemini AI 질의응답)
     // ==========================================================================
     queryForm.addEventListener("submit", (e) => {
         e.preventDefault();
@@ -512,7 +535,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 7. 질문 맞춤형 차트 렌더링
     function renderDynamicChart(chartData) {
         if (dynamicChartInstance) dynamicChartInstance.destroy();
 
@@ -604,7 +626,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 8. 답변 복사 및 다운로드
     btnCopyAnswer.addEventListener("click", () => {
         if (!latestAiResult) return;
         navigator.clipboard.writeText(latestAiResult.ai_answer).then(() => {
@@ -626,7 +647,6 @@ document.addEventListener("DOMContentLoaded", () => {
         URL.revokeObjectURL(a.href);
     });
 
-    // 9. 통계 데이터 새로고침 버튼
     btnReloadData.addEventListener("click", async () => {
         btnReloadData.disabled = true;
         btnReloadData.textContent = "⏳ 읽는 중...";
@@ -647,7 +667,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 유틸리티 함수: 만원 단위 포맷팅
     function formatMoney(manwon) {
         if (!manwon || manwon === 0) return "0원";
         if (manwon >= 10000) {
